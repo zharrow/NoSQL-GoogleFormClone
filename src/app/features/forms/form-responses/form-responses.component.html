@@ -1,1 +1,264 @@
-<p>form-responses works!</p>
+<div class="responses-container">
+      <!-- Header -->
+      <div class="responses-header">
+        <div class="header-left">
+          <a routerLink="/forms" class="back-link">
+            <i class="material-icons">arrow_back</i>
+            <span>Retour aux formulaires</span>
+          </a>
+          <h1 class="page-title">{{ form()?.title || 'Réponses' }}</h1>
+        </div>
+
+        <div class="header-actions">
+          <button class="btn btn-outline" (click)="exportResponses()">
+            <i class="material-icons">download</i>
+            <span>Exporter (CSV)</span>
+          </button>
+          <a 
+            [routerLink]="['/forms', formId, 'edit']" 
+            class="btn btn-primary"
+          >
+            <i class="material-icons">edit</i>
+            <span>Modifier le formulaire</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- View mode tabs -->
+      <div class="view-tabs">
+        <button 
+          class="tab"
+          [class.active]="viewMode() === 'summary'"
+          (click)="setViewMode('summary')"
+        >
+          <i class="material-icons">assessment</i>
+          <span>Résumé</span>
+        </button>
+        <button 
+          class="tab"
+          [class.active]="viewMode() === 'individual'"
+          (click)="setViewMode('individual')"
+        >
+          <i class="material-icons">person</i>
+          <span>Individuel</span>
+        </button>
+        <button 
+          class="tab"
+          [class.active]="viewMode() === 'table'"
+          (click)="setViewMode('table')"
+        >
+          <i class="material-icons">table_chart</i>
+          <span>Tableau</span>
+        </button>
+      </div>
+
+      <!-- Loading state -->
+      <div class="loading-state" *ngIf="isLoading()">
+        <i class="material-icons animate-spin">refresh</i>
+        <p>Chargement des réponses...</p>
+      </div>
+
+      <!-- No responses -->
+      <div 
+        class="empty-state" 
+        *ngIf="!isLoading() && responses().length === 0"
+      >
+        <i class="material-icons">inbox</i>
+        <h2>Aucune réponse pour le moment</h2>
+        <p>Partagez votre formulaire pour commencer à collecter des réponses</p>
+        <button class="btn btn-primary" (click)="shareForm()">
+          <i class="material-icons">share</i>
+          <span>Partager le formulaire</span>
+        </button>
+      </div>
+
+      <!-- Summary view -->
+      <div 
+        class="summary-view" 
+        *ngIf="viewMode() === 'summary' && !isLoading() && responses().length > 0"
+      >
+        <!-- Response stats -->
+        <div class="stats-cards">
+          <div class="stat-card">
+            <i class="material-icons">people</i>
+            <div class="stat-content">
+              <h3>{{ responses().length }}</h3>
+              <p>Réponses totales</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <i class="material-icons">trending_up</i>
+            <div class="stat-content">
+              <h3>{{ getResponseRate() }}%</h3>
+              <p>Taux de complétion</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <i class="material-icons">schedule</i>
+            <div class="stat-content">
+              <h3>{{ getAverageTime() }}</h3>
+              <p>Temps moyen</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question summaries -->
+        <div class="question-summaries">
+          <div 
+            *ngFor="let question of questions(); trackBy: trackByQuestionId"
+            class="question-summary animate-fadeIn"
+          >
+            <h3 class="question-title">
+              {{ question.title }}
+              <span class="response-count">
+                {{ getQuestionResponseCount(question._id) }} réponses
+              </span>
+            </h3>
+
+            <!-- Text responses summary -->
+            <div 
+              *ngIf="isTextQuestion(question.question_type)"
+              class="text-responses"
+            >
+              <div 
+                *ngFor="let response of getTextResponses(question._id).slice(0, 5)"
+                class="text-response"
+              >
+                <i class="material-icons">person</i>
+                <p>{{ response }}</p>
+              </div>
+              <button 
+                *ngIf="getTextResponses(question._id).length > 5"
+                class="show-more-btn"
+                (click)="showAllTextResponses(question._id)"
+              >
+                Voir {{ getTextResponses(question._id).length - 5 }} réponses de plus
+              </button>
+            </div>
+
+            <!-- Choice responses summary -->
+            <div 
+              *ngIf="hasOptions(question.question_type)"
+              class="choice-summary"
+            >
+              <div 
+                *ngFor="let option of question.options"
+                class="choice-option"
+              >
+                <div class="option-info">
+                  <span class="option-text">{{ option }}</span>
+                  <span class="option-count">{{ getOptionCount(question._id, option) }}</span>
+                </div>
+                <div class="option-bar">
+                  <div 
+                    class="option-fill"
+                    [style.width.%]="getOptionPercentage(question._id, option)"
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Number responses summary -->
+            <div 
+              *ngIf="question.question_type === QuestionType.NUMBER"
+              class="number-summary"
+            >
+              <div class="number-stats">
+                <div class="number-stat">
+                  <span class="stat-label">Min</span>
+                  <span class="stat-value">{{ getNumberStats(question._id).min }}</span>
+                </div>
+                <div class="number-stat">
+                  <span class="stat-label">Moy</span>
+                  <span class="stat-value">{{ getNumberStats(question._id).avg }}</span>
+                </div>
+                <div class="number-stat">
+                  <span class="stat-label">Max</span>
+                  <span class="stat-value">{{ getNumberStats(question._id).max }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Individual view -->
+      <div 
+        class="individual-view" 
+        *ngIf="viewMode() === 'individual' && !isLoading() && responses().length > 0"
+      >
+        <div class="response-navigation">
+          <button 
+            class="nav-btn"
+            (click)="previousResponse()"
+            [disabled]="currentResponseIndex() === 0"
+          >
+            <i class="material-icons">chevron_left</i>
+          </button>
+          <span class="nav-info">
+            Réponse {{ currentResponseIndex() + 1 }} sur {{ responses().length }}
+          </span>
+          <button 
+            class="nav-btn"
+            (click)="nextResponse()"
+            [disabled]="currentResponseIndex() === responses().length - 1"
+          >
+            <i class="material-icons">chevron_right</i>
+          </button>
+        </div>
+
+        <div class="individual-response" *ngIf="currentResponse()">
+          <div class="response-meta">
+            <div class="meta-item">
+              <i class="material-icons">person</i>
+              <span>{{ currentResponse()!.respondent_id || 'Anonyme' }}</span>
+            </div>
+            <div class="meta-item">
+              <i class="material-icons">event</i>
+              <span>{{ formatDate(currentResponse()!.submitted_at) }}</span>
+            </div>
+          </div>
+
+          <div class="response-answers">
+            <div 
+              *ngFor="let question of questions()"
+              class="answer-card"
+            >
+              <h4 class="answer-question">{{ question.title }}</h4>
+              <div class="answer-value">
+                {{ getAnswerDisplay(currentResponse()!, question) }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table view -->
+      <div 
+        class="table-view" 
+        *ngIf="viewMode() === 'table' && !isLoading() && responses().length > 0"
+      >
+        <div class="table-container">
+          <table class="responses-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Répondant</th>
+                <th *ngFor="let question of questions()">
+                  {{ question.title }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let response of responses()">
+                <td>{{ formatDate(response.submitted_at) }}</td>
+                <td>{{ response.respondent_id || 'Anonyme' }}</td>
+                <td *ngFor="let question of questions()">
+                  {{ getAnswerDisplay(response, question) }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>

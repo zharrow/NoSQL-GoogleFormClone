@@ -1,59 +1,219 @@
-# GoogleFormClone
+# Angular Forms Clone
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.12.
+Un clone de Google Forms développé avec Angular 19, offrant une interface moderne et intuitive pour créer et gérer des formulaires en ligne.
 
-## Development server
+## 🚀 Fonctionnalités
 
-To start a local development server, run:
+### Gestion des formulaires
+- ✅ Création et édition de formulaires
+- ✅ 8 types de questions différents (texte court, texte long, choix multiple, cases à cocher, liste déroulante, nombre, date, email)
+- ✅ Drag & drop pour réorganiser les questions
+- ✅ Preview en temps réel
+- ✅ Duplication de formulaires et questions
+- ✅ Activation/désactivation des formulaires
 
+### Collecte des réponses
+- ✅ Interface de réponse responsive
+- ✅ Validation en temps réel
+- ✅ Barre de progression
+- ✅ Support de l'authentification optionnelle
+- ✅ Sauvegarde automatique des brouillons
+
+### Analyse des réponses
+- ✅ Vue résumé avec statistiques
+- ✅ Vue individuelle pour parcourir les réponses
+- ✅ Vue tableau pour une vision d'ensemble
+- ✅ Export CSV des réponses
+- ✅ Graphiques et visualisations
+
+### Fonctionnalités techniques
+- ✅ Architecture modulaire et scalable
+- ✅ Signals Angular pour la réactivité
+- ✅ Guards pour la protection des routes
+- ✅ Intercepteurs HTTP pour l'authentification
+- ✅ Gestion centralisée des erreurs
+- ✅ Animations fluides
+- ✅ Design responsive
+
+## 📋 Prérequis
+
+- Node.js (v18 ou supérieur)
+- Angular CLI (v19)
+- MongoDB (pour le backend)
+- Un backend API compatible (FastAPI recommandé)
+
+## 🛠️ Installation
+
+1. **Cloner le projet**
+```bash
+git clone https://github.com/votre-username/angular-forms-clone.git
+cd angular-forms-clone
+```
+
+2. **Installer les dépendances**
+```bash
+npm install
+```
+
+3. **Configurer l'environnement**
+
+Modifier le fichier `src/environments/environment.ts` :
+```typescript
+export const environment = {
+  production: false,
+  apiUrl: 'http://localhost:8000/api' // URL de votre API
+};
+```
+
+4. **Installer Angular CDK (pour le drag & drop)**
+```bash
+npm install @angular/cdk
+```
+
+## 🚀 Démarrage
+
+### Mode développement
 ```bash
 ng serve
 ```
+L'application sera accessible sur `http://localhost:4200`
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
+### Build de production
 ```bash
-ng generate component component-name
+ng build --configuration production
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## 📁 Structure du projet
 
-```bash
-ng generate --help
+```
+src/
+├── app/
+│   ├── core/                    # Services singleton, guards, intercepteurs
+│   │   ├── services/           # Services métier
+│   │   ├── guards/             # Guards de navigation
+│   │   ├── interceptors/       # Intercepteurs HTTP
+│   │   └── models/             # Modèles TypeScript
+│   │
+│   ├── shared/                 # Composants réutilisables
+│   │   ├── components/         # Composants partagés
+│   │   └── services/           # Services utilitaires
+│   │
+│   ├── features/               # Modules fonctionnels
+│   │   ├── auth/              # Authentification
+│   │   ├── dashboard/         # Tableau de bord
+│   │   └── forms/             # Gestion des formulaires
+│   │
+│   └── layouts/               # Layouts de l'application
+│
+├── assets/
+│   └── styles/                # Styles globaux CSS
+│       ├── variables.css      # Variables CSS
+│       ├── animations.css     # Animations
+│       └── utilities.css      # Classes utilitaires
+│
+└── environments/              # Configuration par environnement
 ```
 
-## Building
+## 🔧 Configuration API
 
-To build the project run:
+L'application nécessite une API backend qui expose les endpoints suivants :
 
-```bash
-ng build
-```
+### Authentification
+- `POST /api/auth/login` - Connexion
+- `POST /api/auth/register` - Inscription
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+### Formulaires
+- `GET /api/forms` - Liste des formulaires
+- `GET /api/forms/:id` - Détails d'un formulaire
+- `POST /api/forms` - Créer un formulaire
+- `PATCH /api/forms/:id` - Modifier un formulaire
+- `DELETE /api/forms/:id` - Supprimer un formulaire
 
-## Running unit tests
+### Questions
+- `GET /api/forms/:id/questions` - Questions d'un formulaire
+- `POST /api/forms/:id/questions` - Ajouter une question
+- `PATCH /api/forms/:id/questions/:questionId` - Modifier une question
+- `DELETE /api/forms/:id/questions/:questionId` - Supprimer une question
+- `POST /api/forms/:id/questions/reorder` - Réordonner les questions
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+### Réponses
+- `POST /api/forms/:id/submit` - Soumettre une réponse
+- `GET /api/forms/:id/responses` - Liste des réponses
+- `GET /api/responses/:id` - Détails d'une réponse
 
+## 🎨 Personnalisation
+
+### Thème et couleurs
+Les variables CSS sont définies dans `src/assets/styles/variables.css`. Vous pouvez personnaliser :
+- Les couleurs primaires et secondaires
+- Les espacements
+- Les ombres
+- Les border-radius
+- Les breakpoints responsive
+
+### Animations
+Les animations sont définies dans `src/assets/styles/animations.css`. Vous pouvez ajouter ou modifier les animations selon vos besoins.
+
+## 🧪 Tests
+
+### Tests unitaires
 ```bash
 ng test
 ```
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
+### Tests e2e
 ```bash
 ng e2e
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+## 📦 Déploiement
 
-## Additional Resources
+### Build
+```bash
+ng build --configuration production
+```
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+### Déploiement sur un serveur
+1. Copier le contenu du dossier `dist/` sur votre serveur
+2. Configurer votre serveur web (nginx, Apache) pour servir l'application
+3. S'assurer que toutes les routes redirigent vers `index.html` (SPA)
+
+### Exemple de configuration nginx
+```nginx
+server {
+    listen 80;
+    server_name example.com;
+    root /var/www/angular-forms;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api {
+        proxy_pass http://backend-api:8000;
+    }
+}
+```
+
+## 🤝 Contribution
+
+1. Fork le projet
+2. Créer une branche (`git checkout -b feature/AmazingFeature`)
+3. Commit les changements (`git commit -m 'Add some AmazingFeature'`)
+4. Push sur la branche (`git push origin feature/AmazingFeature`)
+5. Ouvrir une Pull Request
+
+## 📝 Licence
+
+Ce projet est sous licence MIT.
+
+## 🙏 Remerciements
+
+- Angular Team pour le framework
+- Material Design pour les icônes
+- Google Forms pour l'inspiration
+
+## 📧 Contact
+
+Pour toute question ou suggestion, n'hésitez pas à ouvrir une issue sur GitHub.
