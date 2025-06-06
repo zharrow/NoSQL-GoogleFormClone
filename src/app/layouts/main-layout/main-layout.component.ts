@@ -69,7 +69,7 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
           </button>
 
           <!-- Dropdown -->
-          <div class="user-dropdown" *ngIf="userMenuOpen()" @slideDown>
+          <div class="user-dropdown" *ngIf="userMenuOpen()">
             <div class="dropdown-header">
               <p class="dropdown-email">{{ currentUser()?.email }}</p>
             </div>
@@ -128,7 +128,6 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
     }
 
     .navbar-brand {
-      background: url('../assets/logo.png') no-repeat center center;
       display: flex;
       align-items: center;
       gap: 0.5rem;

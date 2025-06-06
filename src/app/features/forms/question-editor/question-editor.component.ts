@@ -424,10 +424,10 @@ export class QuestionEditorComponent implements OnInit {
     description: [''],
     is_required: [false],
     options: this.fb.array([]),
-    min_length: [null],
-    max_length: [null],
-    min_value: [null],
-    max_value: [null]
+    min_length: [null as number | null],
+    max_length: [null as number | null],
+    min_value: [null as number | null],
+    max_value: [null as number | null]
   });
 
   get optionsArray() {
@@ -448,9 +448,9 @@ export class QuestionEditorComponent implements OnInit {
       description: this.question.description,
       is_required: this.question.is_required,
       min_length: this.question.min_length,
-      max_length: this.question.max_length,
-      min_value: this.question.min_value,
-      max_value: this.question.max_value
+      max_length: this.question.max_length ?? null,
+      min_value: this.question.min_value ?? null,
+      max_value: this.question.max_value ?? null
     });
 
     // Initialiser les options si nécessaire
@@ -553,7 +553,7 @@ export class QuestionEditorComponent implements OnInit {
 
     // Ajouter les options si nécessaire
     if (this.hasOptions()) {
-      updateData.options = formValue.options!.filter(o => o.trim() !== '');
+      updateData.options = (formValue.options as string[])!.filter(o => o.trim() !== '');
     }
 
     // Ajouter les validations si nécessaire

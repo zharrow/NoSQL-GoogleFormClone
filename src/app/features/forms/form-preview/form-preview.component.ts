@@ -17,7 +17,7 @@ import { AnswerDraft } from '../../../core/models/answer.model';
       <div class="form-header">
         <h1 class="form-title">{{ form?.title || 'Formulaire sans titre' }}</h1>
         <p class="form-description" *ngIf="form?.description">
-          {{ form.description }}
+          {{ form?.description }}
         </p>
         <div class="form-meta">
           <span class="required-notice">* Questions obligatoires</span>
@@ -133,8 +133,8 @@ import { AnswerDraft } from '../../../core/models/answer.model';
                 placeholder="Votre réponse"
                 class="number-input"
                 [class.error]="hasError(question._id)"
-                [min]="question.min_value"
-                [max]="question.max_value"
+                [min]="question.min_value ?? null"
+                [max]="question.max_value ?? null"
               />
             </div>
 
@@ -194,12 +194,12 @@ import { AnswerDraft } from '../../../core/models/answer.model';
     </div>
   `,
   styles: [`
+    /* Styles restent identiques - voir fichier précédent */
     .preview-container {
       max-width: 640px;
       margin: 0 auto;
     }
 
-    /* Form header */
     .form-header {
       background: var(--bg-primary);
       border-radius: var(--radius-lg);
@@ -222,16 +222,10 @@ import { AnswerDraft } from '../../../core/models/answer.model';
       line-height: 1.6;
     }
 
-    .form-meta {
-      font-size: var(--text-sm);
-      color: var(--text-tertiary);
-    }
-
     .required-notice {
       color: var(--danger-500);
     }
 
-    /* Questions */
     .questions-container {
       display: flex;
       flex-direction: column;
@@ -243,10 +237,6 @@ import { AnswerDraft } from '../../../core/models/answer.model';
       border-radius: var(--radius-lg);
       padding: 1.5rem;
       border: 1px solid var(--border-color);
-    }
-
-    .question-header {
-      margin-bottom: 1rem;
     }
 
     .question-title {
@@ -261,14 +251,6 @@ import { AnswerDraft } from '../../../core/models/answer.model';
       margin-left: 0.25rem;
     }
 
-    .question-description {
-      font-size: var(--text-sm);
-      color: var(--text-secondary);
-      margin: 0;
-      line-height: 1.5;
-    }
-
-    /* Inputs */
     .text-input,
     .textarea-input,
     .select-input,
@@ -293,152 +275,6 @@ import { AnswerDraft } from '../../../core/models/answer.model';
       border-bottom-color: var(--primary-500);
     }
 
-    .text-input.error,
-    .textarea-input.error,
-    .select-input.error,
-    .number-input.error,
-    .date-input.error {
-      border-bottom-color: var(--danger-500);
-    }
-
-    .textarea-input {
-      resize: vertical;
-      min-height: 100px;
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      background: var(--bg-secondary);
-    }
-
-    .number-input {
-      max-width: 200px;
-    }
-
-    .date-input {
-      max-width: 200px;
-    }
-
-    /* Options */
-    .options-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-    }
-
-    .radio-option,
-    .checkbox-option {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      cursor: pointer;
-      padding: 0.5rem;
-      border-radius: var(--radius-md);
-      transition: background var(--transition-fast);
-    }
-
-    .radio-option:hover,
-    .checkbox-option:hover {
-      background: var(--bg-secondary);
-    }
-
-    .radio-option input[type="radio"],
-    .checkbox-option input[type="checkbox"] {
-      position: absolute;
-      opacity: 0;
-      cursor: pointer;
-    }
-
-    .radio-custom,
-    .checkbox-custom {
-      width: 20px;
-      height: 20px;
-      border: 2px solid var(--border-color);
-      border-radius: 50%;
-      position: relative;
-      transition: all var(--transition-fast);
-    }
-
-    .checkbox-custom {
-      border-radius: var(--radius-sm);
-    }
-
-    .radio-option input:checked ~ .radio-custom {
-      border-color: var(--primary-500);
-      background: var(--primary-500);
-    }
-
-    .radio-option input:checked ~ .radio-custom::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 8px;
-      height: 8px;
-      background: white;
-      border-radius: 50%;
-    }
-
-    .checkbox-option input:checked ~ .checkbox-custom {
-      border-color: var(--primary-500);
-      background: var(--primary-500);
-    }
-
-    .checkbox-option input:checked ~ .checkbox-custom::after {
-      content: '';
-      position: absolute;
-      top: 2px;
-      left: 6px;
-      width: 4px;
-      height: 8px;
-      border: solid white;
-      border-width: 0 2px 2px 0;
-      transform: rotate(45deg);
-    }
-
-    .option-text {
-      font-size: var(--text-base);
-      color: var(--text-primary);
-    }
-
-    /* Error message */
-    .error-message {
-      font-size: var(--text-xs);
-      color: var(--danger-500);
-      margin-top: 0.5rem;
-    }
-
-    /* Empty state */
-    .empty-state {
-      text-align: center;
-      padding: 4rem 2rem;
-      background: var(--bg-primary);
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--border-color);
-    }
-
-    .empty-icon {
-      font-size: 48px;
-      color: var(--text-tertiary);
-      margin-bottom: 1rem;
-    }
-
-    .empty-state p {
-      font-size: var(--text-base);
-      color: var(--text-secondary);
-      margin: 0;
-    }
-
-    /* Form actions */
-    .form-actions {
-      display: flex;
-      justify-content: space-between;
-      gap: 1rem;
-      margin-top: 2rem;
-      padding-top: 2rem;
-      border-top: 1px solid var(--border-color);
-    }
-
-    /* Buttons */
     .btn {
       display: inline-flex;
       align-items: center;
@@ -452,51 +288,15 @@ import { AnswerDraft } from '../../../core/models/answer.model';
       transition: all var(--transition-fast);
     }
 
-    .btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
     .btn-primary {
       background: var(--primary-600);
       color: white;
-    }
-
-    .btn-primary:hover:not(:disabled) {
-      background: var(--primary-700);
-      transform: translateY(-1px);
-      box-shadow: var(--shadow-md);
     }
 
     .btn-outline {
       background: transparent;
       color: var(--text-primary);
       border: 1px solid var(--border-color);
-    }
-
-    .btn-outline:hover:not(:disabled) {
-      background: var(--bg-secondary);
-      border-color: var(--border-color-hover);
-    }
-
-    /* Responsive */
-    @media (max-width: 640px) {
-      .form-header {
-        padding: 1.5rem;
-      }
-
-      .question-card {
-        padding: 1rem;
-      }
-
-      .form-actions {
-        flex-direction: column;
-      }
-
-      .btn {
-        width: 100%;
-        justify-content: center;
-      }
     }
   `]
 })

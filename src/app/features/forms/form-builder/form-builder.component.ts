@@ -119,12 +119,12 @@ import { FormPreviewComponent } from '../form-preview/form-preview.component';
           <!-- Questions list -->
           <div 
             cdkDropList 
-            [cdkDropListData]="questions"
+            [cdkDropListData]="questions()"
             (cdkDropListDropped)="dropQuestion($event)"
             class="questions-list"
           >
             <div 
-              *ngFor="let question of questions; let i = index; trackBy: trackByQuestionId"
+              *ngFor="let question of questions(); let i = index; trackBy: trackByQuestionId"
               cdkDrag
               class="question-wrapper animate-fadeIn"
               [class.selected]="selectedQuestionId() === question._id"
@@ -240,7 +240,7 @@ import { FormPreviewComponent } from '../form-preview/form-preview.component';
       <div class="preview-container" *ngIf="showPreview()">
         <app-form-preview
           [form]="currentForm()"
-          [questions]="questions"
+          [questions]="questions()"
         />
       </div>
     </div>

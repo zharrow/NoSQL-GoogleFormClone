@@ -10,275 +10,339 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { FormWithQuestions } from '../../../core/models/form.model';
 import { Question, QuestionType, QuestionUtils } from '../../../core/models/question.model';
-import { AnswerDraft, AnswerUtils } from '../../../core/models/answer.model';
-import e from 'express';
+import { AnswerDraft, AnswerUtils, FormProgress } from '../../../core/models/answer.model';
 
 @Component({
   selector: 'app-form-viewer',
   standalone: true,
   imports: [CommonModule, RouterLink, FormsModule],
-  template: `
-    <div class="viewer-container">
-      <!-- Loading state -->
-      <div class="loading-state" *ngIf="isLoading()">
-        <div class="loading-spinner">
-          <i class="material-icons animate-spin">refresh</i>
-        </div>
-        <p>Chargement du formulaire...</p>
-      </div>
-
-      <!-- Error state -->
-      <div class="error-state" *ngIf="error() && !isLoading()">
-        <i class="material-icons error-icon">error_outline</i>
-        <h2>{{ error() }}</h2>
-        <a routerLink="/" class="btn btn-primary">
-          Retour à l'accueil
-        </a>
-      </div>
-
-      <!-- Form not accepting responses -->
-      <div 
-        class="closed-state" 
-        *ngIf="form() && !form()!.accepts_responses && !isLoading()"
-      >
-        <i class="material-icons closed-icon">lock</i>
-        <h2>Ce formulaire n'accepte plus de réponses</h2>
-        <p>Le créateur a fermé ce formulaire aux nouvelles réponses.</p>
-      </div>
-
-      <!-- Success state -->
-      <div class="success-state" *ngIf="isSubmitted()">
-        <div class="success-content animate-fadeInUp">
-          <i class="material-icons success-icon">check_circle</i>
-          <h2>Réponse envoyée !</h2>
-          <p>Votre réponse a été enregistrée avec succès.</p>
-          
-          <div class="success-actions">
-            <button class="btn btn-outline" (click)="submitAnother()">
-              Envoyer une autre réponse
-            </button>
-            <a routerLink="/" class="btn btn-primary">
-              Retour à l'accueil
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Form content -->
-      <div 
-        class="form-wrapper" 
-        *ngIf="form() && form()!.accepts_responses && !isLoading() && !isSubmitted()"
-      >
-        <!-- Progress bar -->
-        <div class="progress-container">
-          <div class="progress-bar">
-            <div 
-              class="progress-fill"
-              [style.width.%]="progress().percentComplete"
-            ></div>
-          </div>
-          <span class="progress-text">
-            {{ progress().answeredQuestions }} / {{ progress().totalQuestions }} questions
-          </span>
-        </div>
-
-        <!-- Form header -->
-        <div class="form-header">
-          <h1 class="form-title">{{ form()!.title }}</h1>
-          <p class="form-description" *ngIf="form()!.description">
-            {{ form()!.description }}
-          </p>
-          <div class="form-meta">
-            <span class="required-notice">* Questions obligatoires</span>
-          </div>
-        </div>
-
-        <!-- Questions -->
-        <form (ngSubmit)="submitForm()" class="questions-container">
-          <div 
-            *ngFor="let question of questions(); let i = index"
-            class="question-card animate-fadeIn"
-            [class.has-error]="currentErrors()[question._id]"
-          >
-            <div class="question-header">
-              <h3 class="question-title">
-                {{ question.title }}
-                <span class="required-mark" *ngIf="question.is_required">*</span>
-              </h3>
-              <p class="question-description" *ngIf="question.description">
-                {{ question.description }}
-              </p>
-            </div>
-
-            <div class="question-content">
-              <!-- Short text -->
-              <div *ngIf="question.question_type === QuestionType.SHORT_TEXT">
-                <input
-                  type="text"
-                  [(ngModel)]="currentAnswers[question._id]"
-                  [name]="'question-' + question._id"
-                  (ngModelChange)="updateAnswer(question, $event)"
-                  placeholder="Votre réponse"
-                  class="text-input"
-                  [class.error]="currentErrors()[question._id]"
-                />
-              </div>
-
-              <!-- Long text -->
-              <div *ngIf="question.question_type === QuestionType.LONG_TEXT">
-                <textarea
-                  [(ngModel)]="currentAnswers[question._id]"
-                  [name]="'question-' + question._id"
-                  (ngModelChange)="updateAnswer(question, $event)"
-                  placeholder="Votre réponse"
-                  class="textarea-input"
-                  [class.error]="currentErrors()[question._id]"
-                  rows="4"
-                ></textarea>
-              </div>
-
-              <!-- Multiple choice -->
-              <div 
-                *ngIf="question.question_type === QuestionType.MULTIPLE_CHOICE"
-                class="options-list"
-              >
-                <label 
-                  *ngFor="let option of question.options"
-                  class="radio-option"
-                >
-                  <input
-                    type="radio"
-                    [name]="'question-' + question._id"
-                    [value]="option"
-                    [(ngModel)]="currentAnswers[question._id]"
-                    (ngModelChange)="updateAnswer(question, $event)"
-                  />
-                  <span class="radio-custom"></span>
-                  <span class="option-text">{{ option }}</span>
-                </label>
-              </div>
-
-              <!-- Checkbox -->
-              <div 
-                *ngIf="question.question_type === QuestionType.CHECKBOX"
-                class="options-list"
-              >
-                <label 
-                  *ngFor="let option of question.options"
-                  class="checkbox-option"
-                >
-                  <input
-                    type="checkbox"
-                    [name]="'question-' + question._id + '-' + option"
-                    [value]="option"
-                    [checked]="isChecked(question._id, option)"
-                    (change)="toggleCheckbox(question, option)"
-                  />
-                  <span class="checkbox-custom"></span>
-                  <span class="option-text">{{ option }}</span>
-                </label>
-              </div>
-
-              <!-- Dropdown -->
-              <div *ngIf="question.question_type === QuestionType.DROPDOWN">
-                <select
-                  [(ngModel)]="currentAnswers[question._id]"
-                  [name]="'question-' + question._id"
-                  (ngModelChange)="updateAnswer(question, $event)"
-                  class="select-input"
-                  [class.error]="currentErrors()[question._id]"
-                >
-                  <option value="" disabled>Choisir une option</option>
-                  <option 
-                    *ngFor="let option of question.options"
-                    [value]="option"
-                  >
-                    {{ option }}
-                  </option>
-                </select>
-              </div>
-
-              <!-- Number -->
-              <div *ngIf="question.question_type === QuestionType.NUMBER">
-                <input
-                  type="number"
-                  [(ngModel)]="currentAnswers[question._id]"
-                  [name]="'question-' + question._id"
-                  (ngModelChange)="updateAnswer(question, $event)"
-                  placeholder="Votre réponse"
-                  class="number-input"
-                  [class.error]="currentErrors()[question._id]"
-                  [min]="question.min_value"
-                  [max]="question.max_value"
-                />
-              </div>
-
-              <!-- Date -->
-              <div *ngIf="question.question_type === QuestionType.DATE">
-                <input
-                  type="date"
-                  [(ngModel)]="currentAnswers[question._id]"
-                  [name]="'question-' + question._id"
-                  (ngModelChange)="updateAnswer(question, $event)"
-                  class="date-input"
-                  [class.error]="currentErrors()[question._id]"
-                />
-              </div>
-
-              <!-- Email -->
-              <div *ngIf="question.question_type === QuestionType.EMAIL">
-                <input
-                  type="email"
-                  [(ngModel)]="currentAnswers[question._id]"
-                  [name]="'question-' + question._id"
-                  (ngModelChange)="updateAnswer(question, $event)"
-                  placeholder="votre.email@example.com"
-                  class="text-input"
-                  [class.error]="currentErrors()[question._id]"
-                />
-              </div>
-
-              <!-- Error message -->
-              <div 
-                class="error-message" 
-                *ngIf="currentErrors()[question._id]"
-              >
-                {{ currentErrors()[question._id] }}
-              </div>
-            </div>
-          </div>
-
-          <!-- Form actions -->
-          <div class="form-actions">
-            <button 
-              type="button" 
-              class="btn btn-outline"
-              (click)="clearForm()"
-            >
-              Effacer le formulaire
-            </button>
-            <button 
-              type="submit" 
-              class="btn btn-primary"
-              [disabled]="isSubmitting()"
-            >
-              <span *ngIf="!isSubmitting()">Envoyer</span>
-              <span *ngIf="isSubmitting()" class="loading">
-                <i class="material-icons animate-spin">refresh</i>
-                Envoi en cours...
-              </span>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  `,
+  templateUrl: './form-viewer.component.html',
   styleUrls: ['./form-viewer.component.scss']
 })
-
 export class FormViewerComponent implements OnInit {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly formService = inject(FormService);
+  private readonly answerService = inject(AnswerService);
+  private readonly authService = inject(AuthService);
+  private readonly toastService = inject(ToastService);
+
+  // État du composant
+  formId = '';
+  readonly form = signal<FormWithQuestions | null>(null);
+  readonly questions = signal<Question[]>([]);
+  readonly isLoading = signal(true);
+  readonly error = signal<string | null>(null);
+  readonly isSubmitted = signal(false);
+  readonly isSubmitting = signal(false);
+
+  // Réponses et erreurs
+  currentAnswers: Record<string, any> = {};
+  readonly currentErrors = signal<Record<string, string>>({});
+
+  // Computed pour la progression
+  readonly progress = computed<FormProgress>(() => {
+    const totalQuestions = this.questions().length;
+    const answeredQuestions = this.getAnsweredQuestionCount();
+    const percentComplete = totalQuestions > 0 
+      ? Math.round((answeredQuestions / totalQuestions) * 100)
+      : 0;
+
+    return {
+      currentQuestionIndex: 0,
+      totalQuestions,
+      answeredQuestions,
+      percentComplete,
+      isComplete: answeredQuestions === totalQuestions
+    };
+  });
+
+  // Exposer QuestionType pour le template
+  QuestionType = QuestionType;
+
   ngOnInit(): void {
     this.formId = this.route.snapshot.params['id'];
+    this.initializeAnswerService();
     this.loadForm();
+  }
+
+  /**
+   * Initialise le service de réponses
+   */
+  private initializeAnswerService(): void {
+    this.answerService.resetState();
+  }
+
+  /**
+   * Charge le formulaire depuis l'API
+   */
+  private loadForm(): void {
+    this.isLoading.set(true);
+    this.error.set(null);
+
+    this.formService.getFormById(this.formId).subscribe({
+      next: (formData) => this.handleFormLoaded(formData),
+      error: (err) => this.handleFormError(err)
+    });
+  }
+
+  /**
+   * Gère le succès du chargement du formulaire
+   */
+  private handleFormLoaded(formData: FormWithQuestions): void {
+    this.form.set(formData);
+    this.questions.set(formData.questions || []);
+    this.initializeAnswers();
+    this.isLoading.set(false);
+  }
+
+  /**
+   * Gère les erreurs de chargement du formulaire
+   */
+  private handleFormError(err: any): void {
+    const errorMessage = this.getErrorMessage(err);
+    this.error.set(errorMessage);
+    this.isLoading.set(false);
+  }
+
+  /**
+   * Extrait le message d'erreur approprié
+   */
+  private getErrorMessage(err: any): string {
+    switch (err.status) {
+      case 404:
+        return 'Formulaire introuvable';
+      case 403:
+        return 'Accès refusé à ce formulaire';
+      case 500:
+        return 'Erreur serveur - Veuillez réessayer plus tard';
+      default:
+        return 'Une erreur est survenue lors du chargement';
+    }
+  }
+
+  /**
+   * Initialise les réponses vides
+   */
+  private initializeAnswers(): void {
+    this.questions().forEach(question => {
+      this.currentAnswers[question._id] = this.getDefaultValue(question);
+    });
+  }
+
+  /**
+   * Obtient la valeur par défaut pour un type de question
+   */
+  private getDefaultValue(question: Question): any {
+    return question.question_type === QuestionType.CHECKBOX ? [] : '';
+  }
+
+  /**
+   * Met à jour une réponse et valide
+   */
+  updateAnswer(question: Question, value: any): void {
+    this.currentAnswers[question._id] = value;
+    this.validateAnswer(question);
+    this.saveAnswerDraft(question, value);
+  }
+
+  /**
+   * Valide une réponse spécifique
+   */
+  private validateAnswer(question: Question): void {
+    const value = this.currentAnswers[question._id];
+    const error = QuestionUtils.validateAnswer(question, value);
+    
+    this.currentErrors.update(errors => {
+      if (error) {
+        return { ...errors, [question._id]: error };
+      } else {
+        const { [question._id]: _, ...rest } = errors;
+        return rest;
+      }
+    });
+  }
+
+  /**
+   * Sauvegarde un brouillon de réponse
+   */
+  private saveAnswerDraft(question: Question, value: any): void {
+    const draft: AnswerDraft = {
+      questionId: question._id,
+      value,
+      isValid: !QuestionUtils.validateAnswer(question, value)
+    };
+    
+    this.answerService.saveAnswerDraft(question._id, draft);
+  }
+
+  /**
+   * Gère les checkbox (valeurs multiples)
+   */
+  toggleCheckbox(question: Question, option: string): void {
+    const current = this.currentAnswers[question._id] || [];
+    const updated = current.includes(option)
+      ? current.filter((o: string) => o !== option)
+      : [...current, option];
+    
+    this.updateAnswer(question, updated);
+  }
+
+  /**
+   * Vérifie si une option est cochée
+   */
+  isChecked(questionId: string, option: string): boolean {
+    const values = this.currentAnswers[questionId];
+    return Array.isArray(values) && values.includes(option);
+  }
+
+  /**
+   * Soumet le formulaire
+   */
+  submitForm(): void {
+    if (!this.validateAllAnswers()) {
+      this.scrollToFirstError();
+      return;
+    }
+
+    this.performSubmission();
+  }
+
+  /**
+   * Valide toutes les réponses avant soumission
+   */
+  private validateAllAnswers(): boolean {
+    let hasErrors = false;
+    const errors: Record<string, string> = {};
+
+    this.questions().forEach(question => {
+      const value = this.currentAnswers[question._id];
+      const error = QuestionUtils.validateAnswer(question, value);
+      
+      if (error) {
+        errors[question._id] = error;
+        hasErrors = true;
+      }
+    });
+
+    this.currentErrors.set(errors);
+    return !hasErrors;
+  }
+
+  /**
+   * Effectue la soumission du formulaire
+   */
+  private performSubmission(): void {
+    this.isSubmitting.set(true);
+    
+    const submission = this.prepareSubmissionData();
+    
+    this.answerService.submitFormResponse(this.formId, submission).subscribe({
+      next: () => this.handleSubmissionSuccess(),
+      error: (err) => this.handleSubmissionError(err)
+    });
+  }
+
+  /**
+   * Prépare les données pour la soumission
+   */
+  private prepareSubmissionData() {
+    const answers = this.questions()
+      .map(question => ({
+        question_id: question._id,
+        value: this.currentAnswers[question._id]
+      }))
+      .filter(answer => this.hasValidValue(answer.value));
+
+    return { answers };
+  }
+
+  /**
+   * Vérifie si une valeur est valide pour la soumission
+   */
+  private hasValidValue(value: any): boolean {
+    if (value === null || value === undefined || value === '') {
+      return false;
+    }
+    if (Array.isArray(value) && value.length === 0) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Gère le succès de la soumission
+   */
+  private handleSubmissionSuccess(): void {
+    this.isSubmitted.set(true);
+    this.isSubmitting.set(false);
+    this.toastService.success('Votre réponse a été enregistrée !');
+  }
+
+  /**
+   * Gère les erreurs de soumission
+   */
+  private handleSubmissionError(err: any): void {
+    this.isSubmitting.set(false);
+    const message = err.error?.detail || 'Erreur lors de l\'envoi';
+    this.toastService.error(message);
+  }
+
+  /**
+   * Fait défiler vers la première erreur
+   */
+  private scrollToFirstError(): void {
+    const firstErrorElement = document.querySelector('.question-card.has-error');
+    firstErrorElement?.scrollIntoView({ 
+      behavior: 'smooth', 
+      block: 'center' 
+    });
+  }
+
+  /**
+   * Efface toutes les réponses
+   */
+  clearForm(): void {
+    if (!this.confirmClearForm()) return;
+
+    this.initializeAnswers();
+    this.currentErrors.set({});
+    this.answerService.clearCurrentAnswers();
+    this.toastService.info('Formulaire effacé');
+  }
+
+  /**
+   * Demande confirmation avant d'effacer
+   */
+  private confirmClearForm(): boolean {
+    return confirm('Êtes-vous sûr de vouloir effacer toutes vos réponses ?');
+  }
+
+  /**
+   * Permet de soumettre une nouvelle réponse
+   */
+  submitAnother(): void {
+    this.resetComponentState();
+    this.initializeAnswers();
+  }
+
+  /**
+   * Remet à zéro l'état du composant
+   */
+  private resetComponentState(): void {
+    this.isSubmitted.set(false);
+    this.isSubmitting.set(false);
+    this.currentErrors.set({});
+    this.answerService.clearCurrentAnswers();
+  }
+
+  /**
+   * Compte le nombre de questions avec réponse
+   */
+  private getAnsweredQuestionCount(): number {
+    return this.questions().filter(question => {
+      const value = this.currentAnswers[question._id];
+      return this.hasValidValue(value);
+    }).length;
   }
 }

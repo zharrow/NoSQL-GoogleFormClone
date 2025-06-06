@@ -17,7 +17,7 @@ type ViewMode = 'summary' | 'individual' | 'table';
   standalone: true,
   imports: [CommonModule, RouterLink],
   templateUrl: `form-responses.component.html`,
-  styleUrls: ['./form-responses.component.css'],
+  styleUrls: ['./form-responses.component.scss'],
 })
 export class FormResponsesComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
