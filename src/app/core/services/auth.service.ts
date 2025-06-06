@@ -1,6 +1,7 @@
 // src/app/core/services/auth.service.ts
 
-import { Injectable, signal, computed, inject } from '@angular/core';
+import { Injectable, signal, computed, inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, BehaviorSubject, tap, catchError, throwError } from 'rxjs';
@@ -15,6 +16,7 @@ import { environment } from '../../../environnements/environment';
 
 /**
  * Service gérant l'authentification et l'état de l'utilisateur
+ * Compatible avec SSR
  */
 @Injectable({
   providedIn: 'root'
@@ -23,6 +25,7 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly tokenService = inject(TokenService);
+  private readonly platformId = inject(PLATFORM_ID);
   
   private readonly baseUrl = `${environment.apiUrl}/auth`;
   
@@ -36,8 +39,10 @@ export class AuthService {
   readonly isLoading = signal(false);
   
   constructor() {
-    // Restaurer l'utilisateur depuis le token si disponible
-    this.initializeAuth();
+    // Restaurer l'utilisateur uniquement côté client
+    if (isPlatformBrowser(this.platformId)) {
+      this.initializeAuth();
+    }
   }
   
   /**
@@ -47,7 +52,6 @@ export class AuthService {
     const token = this.tokenService.getToken();
     if (token && this.tokenService.isTokenValid()) {
       // TODO: Récupérer les infos utilisateur depuis l'API
-      // Pour l'instant, on décode juste le token
       const userData = this.tokenService.getTokenData();
       if (userData) {
         // Simuler un utilisateur basique

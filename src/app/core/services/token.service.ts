@@ -1,37 +1,53 @@
 // src/app/core/services/token.service.ts
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { TokenData } from '../models/user.model';
 
 /**
  * Service de gestion des tokens JWT
- * Gère le stockage, la récupération et la validation des tokens
+ * Compatible avec SSR (Server-Side Rendering)
  */
 @Injectable({
   providedIn: 'root'
 })
 export class TokenService {
   private readonly TOKEN_KEY = 'access_token';
+  private readonly platformId = inject(PLATFORM_ID);
+  
+  /**
+   * Vérifie si on est côté navigateur
+   */
+  private get isBrowser(): boolean {
+    return isPlatformBrowser(this.platformId);
+  }
   
   /**
    * Sauvegarde le token dans le localStorage
    */
   saveToken(token: string): void {
-    localStorage.setItem(this.TOKEN_KEY, token);
+    if (this.isBrowser) {
+      localStorage.setItem(this.TOKEN_KEY, token);
+    }
   }
   
   /**
    * Récupère le token depuis le localStorage
    */
   getToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
+    if (this.isBrowser) {
+      return localStorage.getItem(this.TOKEN_KEY);
+    }
+    return null;
   }
   
   /**
    * Supprime le token du localStorage
    */
   removeToken(): void {
-    localStorage.removeItem(this.TOKEN_KEY);
+    if (this.isBrowser) {
+      localStorage.removeItem(this.TOKEN_KEY);
+    }
   }
   
   /**

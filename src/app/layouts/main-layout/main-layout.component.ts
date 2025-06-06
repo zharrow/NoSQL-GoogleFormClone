@@ -19,8 +19,9 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
       <div class="navbar-container">
         <!-- Logo -->
         <a routerLink="/dashboard" class="navbar-brand">
-          <i class="material-icons">description</i>
-          <span>FormBuilder</span>
+          <img src="../../../assets/FormBuilder.png" alt="FormBuilder Logo" width="32" height="32">
+          <!-- <i class="material-icons">description</i>
+          <span>FormBuilder</span> -->
         </a>
 
         <!-- Desktop menu -->
