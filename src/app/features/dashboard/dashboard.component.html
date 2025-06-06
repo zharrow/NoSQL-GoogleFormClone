@@ -1,0 +1,296 @@
+<!-- src/app/features/dashboard/dashboard.component.html -->
+
+<div class="dashboard-container">
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <div class="hero-text">
+        <h1 class="hero-title animate-fadeInUp">
+          {{ getGreeting() }} {{ fullName() }} 👋
+        </h1>
+        <p class="hero-subtitle animate-fadeInUp" style="animation-delay: 0.1s">
+          Gérez vos formulaires et analysez leurs performances depuis votre tableau de bord
+        </p>
+      </div>
+      
+      <div class="hero-actions animate-fadeInUp" style="animation-delay: 0.2s">
+        <a routerLink="/forms/new" class="hero-cta">
+          <i class="material-icons">add</i>
+          <span>Créer un formulaire</span>
+        </a>
+        <button class="hero-secondary" (click)="loadDashboardData()">
+          <i class="material-icons" [class.animate-spin]="isLoading()">refresh</i>
+          <span>Actualiser</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Background decoration -->
+    <div class="hero-decoration">
+      <div class="decoration-circle circle-1"></div>
+      <div class="decoration-circle circle-2"></div>
+      <div class="decoration-circle circle-3"></div>
+    </div>
+  </section>
+
+  <!-- Stats Overview -->
+  <section class="stats-section">
+    <div class="section-header">
+      <h2 class="section-title">
+        <i class="material-icons">trending_up</i>
+        Vue d'ensemble
+      </h2>
+      <div class="section-subtitle">Statistiques de vos formulaires</div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card primary animate-slideInLeft">
+        <div class="stat-header">
+          <div class="stat-icon">
+            <i class="material-icons">description</i>
+          </div>
+          <div class="stat-trend positive">
+            <i class="material-icons">trending_up</i>
+            <span>+12%</span>
+          </div>
+        </div>
+        <div class="stat-content">
+          <h3 class="stat-value">{{ stats().totalForms }}</h3>
+          <p class="stat-label">Formulaires créés</p>
+          <div class="stat-progress">
+            <div class="progress-bar" style="width: 85%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card success animate-slideInLeft" style="animation-delay: 0.1s">
+        <div class="stat-header">
+          <div class="stat-icon">
+            <i class="material-icons">check_circle</i>
+          </div>
+          <div class="stat-trend positive">
+            <i class="material-icons">trending_up</i>
+            <span>+8%</span>
+          </div>
+        </div>
+        <div class="stat-content">
+          <h3 class="stat-value">{{ stats().activeForms }}</h3>
+          <p class="stat-label">Formulaires actifs</p>
+          <div class="stat-progress">
+            <div class="progress-bar" style="width: 72%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card info animate-slideInLeft" style="animation-delay: 0.2s">
+        <div class="stat-header">
+          <div class="stat-icon">
+            <i class="material-icons">inbox</i>
+          </div>
+          <div class="stat-trend positive">
+            <i class="material-icons">trending_up</i>
+            <span>+24%</span>
+          </div>
+        </div>
+        <div class="stat-content">
+          <h3 class="stat-value">{{ stats().totalResponses }}</h3>
+          <p class="stat-label">Réponses totales</p>
+          <div class="stat-progress">
+            <div class="progress-bar" style="width: 91%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card warning animate-slideInLeft" style="animation-delay: 0.3s">
+        <div class="stat-header">
+          <div class="stat-icon">
+            <i class="material-icons">schedule</i>
+          </div>
+          <div class="stat-trend positive">
+            <i class="material-icons">trending_up</i>
+            <span>+35%</span>
+          </div>
+        </div>
+        <div class="stat-content">
+          <h3 class="stat-value">{{ stats().recentResponses }}</h3>
+          <p class="stat-label">Cette semaine</p>
+          <div class="stat-progress">
+            <div class="progress-bar" style="width: 65%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Actions -->
+  <section class="actions-section">
+    <div class="section-header">
+      <h2 class="section-title">
+        <i class="material-icons">flash_on</i>
+        Actions rapides
+      </h2>
+      <div class="section-subtitle">Accédez rapidement aux fonctionnalités principales</div>
+    </div>
+
+    <div class="actions-grid">
+      <a 
+        *ngFor="let action of quickActions; trackBy: trackByActionId; let i = index"
+        [routerLink]="action.route" 
+        class="action-card animate-scaleIn"
+        [class]="action.color"
+        [style.animation-delay]="'0.' + i + 's'"
+      >
+        <div class="action-header">
+          <div class="action-icon">
+            <i class="material-icons">{{ action.icon }}</i>
+          </div>
+          <div class="action-badge" *ngIf="action.badge">{{ action.badge }}</div>
+        </div>
+        <div class="action-content">
+          <h3 class="action-title">{{ action.title }}</h3>
+          <p class="action-description">{{ action.description }}</p>
+        </div>
+        <div class="action-arrow">
+          <i class="material-icons">arrow_forward</i>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <!-- Recent Forms -->
+  <section class="recent-section" *ngIf="recentForms().length > 0">
+    <div class="section-header">
+      <h2 class="section-title">
+        <i class="material-icons">history</i>
+        Formulaires récents
+      </h2>
+      <a routerLink="/forms" class="view-all-link">
+        <span>Voir tous les formulaires</span>
+        <i class="material-icons">arrow_forward</i>
+      </a>
+    </div>
+
+    <div class="forms-grid">
+      <div 
+        *ngFor="let form of recentForms(); trackBy: trackByFormId; let i = index"
+        class="form-card animate-fadeInUp"
+        [class.inactive]="!form.is_active"
+        [style.animation-delay]="'0.' + i + 's'"
+      >
+        <div class="form-header">
+          <div class="form-status" [class]="'status-' + getFormStatus(form)">
+            <i class="material-icons">circle</i>
+            <span>{{ getFormStatusLabel(form) }}</span>
+          </div>
+          <div class="form-menu">
+            <button class="menu-button">
+              <i class="material-icons">more_vert</i>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-content">
+          <h3 class="form-title">
+            <a [routerLink]="['/forms', form._id]">{{ form.title }}</a>
+          </h3>
+          
+          <p class="form-description" *ngIf="form.description">
+            {{ form.description }}
+          </p>
+
+          <div class="form-metrics">
+            <div class="metric">
+              <i class="material-icons">visibility</i>
+              <span>{{ form.response_count * 3 }} vues</span>
+            </div>
+            <div class="metric">
+              <i class="material-icons">inbox</i>
+              <span>{{ form.response_count }} réponses</span>
+            </div>
+            <div class="metric">
+              <i class="material-icons">schedule</i>
+              <span>{{ formatDate(form.created_at) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <a 
+            [routerLink]="['/forms', form._id, 'edit']" 
+            class="action-btn secondary"
+            title="Modifier"
+          >
+            <i class="material-icons">edit</i>
+          </a>
+          <a 
+            [routerLink]="['/forms', form._id, 'responses']" 
+            class="action-btn primary"
+            title="Voir les réponses"
+          >
+            <i class="material-icons">analytics</i>
+          </a>
+          <button class="action-btn" title="Partager">
+            <i class="material-icons">share</i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Empty State -->
+  <section class="empty-section" *ngIf="recentForms().length === 0 && !formService.loading()">
+    <div class="empty-state animate-bounceIn">
+      <div class="empty-illustration">
+        <div class="empty-icon">
+          <i class="material-icons">description</i>
+        </div>
+        <div class="empty-decoration">
+          <div class="decoration-dot dot-1"></div>
+          <div class="decoration-dot dot-2"></div>
+          <div class="decoration-dot dot-3"></div>
+        </div>
+      </div>
+      
+      <div class="empty-content">
+        <h2 class="empty-title">Créez votre premier formulaire</h2>
+        <p class="empty-description">
+          Commencez à collecter des réponses en quelques minutes avec notre créateur de formulaires intuitif
+        </p>
+        
+        <div class="empty-actions">
+          <a routerLink="/forms/new" class="btn btn-primary btn-lg">
+            <i class="material-icons">add</i>
+            <span>Créer un formulaire</span>
+          </a>
+          <a routerLink="/templates" class="btn btn-outline btn-lg">
+            <i class="material-icons">library_books</i>
+            <span>Utiliser un modèle</span>
+          </a>
+        </div>
+
+        <div class="empty-features">
+          <div class="feature">
+            <i class="material-icons">speed</i>
+            <span>Création rapide</span>
+          </div>
+          <div class="feature">
+            <i class="material-icons">phone_android</i>
+            <span>Responsive</span>
+          </div>
+          <div class="feature">
+            <i class="material-icons">analytics</i>
+            <span>Analytiques avancées</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Loading State -->
+  <div class="loading-overlay" *ngIf="isLoading()">
+    <div class="loading-spinner">
+      <div class="spinner-ring"></div>
+      <p>Chargement des données...</p>
+    </div>
+  </div>
+</div>
